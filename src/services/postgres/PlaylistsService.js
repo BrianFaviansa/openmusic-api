@@ -72,15 +72,32 @@ class PlaylistsService {
   }
 
   async getSongsFromPlaylist(playlistId) {
-    const query = {
+    const playlistQuery = {
+      text: `SELECT playlists.id, playlists.name, users.username
+             FROM playlists
+                      JOIN users ON playlists.owner = users.id
+             WHERE playlists.id = $1`,
+      values: [playlistId],
+    };
+    const playlistResult = await this._pool.query(playlistQuery);
+
+    if (!playlistResult.rows.length) {
+      throw new NotFoundError('Playlist tidak ditemukan');
+    }
+
+    const songsQuery = {
       text: `SELECT songs.id, songs.title, songs.performer
              FROM songs
                       JOIN playlist_songs ON songs.id = playlist_songs.song_id
              WHERE playlist_songs.playlist_id = $1`,
       values: [playlistId],
     };
-    const result = await this._pool.query(query);
-    return result.rows;
+    const songsResult = await this._pool.query(songsQuery);
+
+    const playlist = playlistResult.rows[0];
+    playlist.songs = songsResult.rows;
+
+    return playlist;
   }
 
   async deleteSongFromPlaylist(playlistId, songId, userId) {
@@ -115,12 +132,13 @@ class PlaylistsService {
     try {
       await this.verifyPlaylistOwner(playlistId, userId);
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw error;
-      }
-      try {
-        await this._collaborationService.verifyCollaborator(playlistId, userId);
-      } catch {
+      if (error instanceof AuthorizationError) {
+        try {
+          await this._collaborationService.verifyCollaborator(playlistId, userId);
+        } catch {
+          throw error;
+        }
+      } else {
         throw error;
       }
     }
