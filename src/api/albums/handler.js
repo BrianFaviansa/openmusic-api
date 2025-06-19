@@ -1,8 +1,9 @@
 const autoBind = require("auto-bind");
 
 class AlbumsHandler {
-  constructor(service, validator) {
+  constructor(service, storageService, validator) {
     this._service = service;
+    this._storageService = storageService;
     this._validator = validator;
 
     autoBind(this);
@@ -33,7 +34,7 @@ class AlbumsHandler {
   }
 
   async getAlbumByIdHandler(request) {
-    const { id } = request.params;
+    const {id} = request.params;
     const album = await this._service.getAlbumById(id);
     return {
       status: 'success',
@@ -44,7 +45,7 @@ class AlbumsHandler {
   }
 
   async putAlbumByIdHandler(request) {
-    const { id } = request.params;
+    const {id} = request.params;
     this._validator.validatePutAlbumPayload(request.payload);
     await this._service.editAlbumById(id, request.payload);
 
@@ -55,13 +56,30 @@ class AlbumsHandler {
   }
 
   async deleteAlbumByIdHandler(request) {
-    const { id } = request.params;
+    const {id} = request.params;
     await this._service.deleteAlbumById(id);
 
     return {
       status: 'success',
       message: 'Album berhasil dihapus',
     };
+  }
+
+  async postAlbumCoverHandler(request, h) {
+    const {cover} = request.payload;
+    const {id: albumId} = request.params;
+
+    const filename = await this._storageService.writeFile(cover, cover.hapi);
+    const fileLocation = `http://${process.env.HOST}:${process.env.PORT}/albums/covers/${filename}`;
+
+    await this._service.addAlbumCover(albumId, fileLocation);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Sampul berhasil diunggah',
+    });
+    response.code(201);
+    return response;
   }
 }
 
