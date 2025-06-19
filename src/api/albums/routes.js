@@ -40,29 +40,16 @@ const routes = (handler) => [
     },
   },
   {
-    method: 'GET',
-    path: '/albums/covers/{param*}',
-    handler: {
-      directory: {
-        path: path.resolve(__dirname, 'api/albums/file/images'),
-      },
-    },
-  },
-  {
     method: 'POST',
     path: '/albums/{id}/likes',
     handler: handler.postAlbumLikeHandler,
-    options: {
-      auth: 'openmusic_jwt',
-    },
+    options: {auth: 'openmusic_jwt'},
   },
   {
     method: 'DELETE',
     path: '/albums/{id}/likes',
     handler: handler.deleteAlbumLikeHandler,
-    options: {
-      auth: 'openmusic_jwt',
-    },
+    options: {auth: 'openmusic_jwt'},
   },
   {
     method: 'GET',
