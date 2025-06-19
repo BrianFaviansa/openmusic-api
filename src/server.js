@@ -164,8 +164,13 @@ const init = async () => {
         return newResponse;
       }
 
-      if (!response.isServer) {
-        return h.continue;
+      if (response.isBoom) {
+        const newResponse = h.response({
+          status: 'fail',
+          message: response.message,
+        });
+        newResponse.code(response.output.statusCode);
+        return newResponse;
       }
 
       console.error(response);

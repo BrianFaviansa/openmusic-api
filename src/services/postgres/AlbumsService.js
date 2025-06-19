@@ -132,28 +132,32 @@ class AlbumsService {
 
   async getAlbumLikes(albumId) {
     try {
-      const result = await this._cacheService.get(`album-likes:${albumId}`);
-      return {
-        count: parseInt(result, 10),
-        isCache: true,
-      };
+      const cachedResult = await this._cacheService.get(`album-likes:${albumId}`);
+
+      if (cachedResult !== null) {
+        return {
+          count: parseInt(cachedResult, 10),
+          isCache: true,
+        };
+      }
     } catch (error) {
-      await this.verifyAlbumExists(albumId);
-
-      const query = {
-        text: 'SELECT COUNT(id) as likes FROM user_album_likes WHERE album_id = $1',
-        values: [albumId],
-      };
-      const result = await this._pool.query(query);
-      const likesCount = parseInt(result.rows[0].likes, 10);
-
-      await this._cacheService.set(`album-likes:${albumId}`, likesCount);
-
-      return {
-        count: likesCount,
-        isCache: false,
-      };
+      console.error(`Redis Error on get: ${error.message}`);
     }
+
+    await this.verifyAlbumExists(albumId);
+    const query = {
+      text: 'SELECT COUNT(id) FROM user_album_likes WHERE album_id = $1',
+      values: [albumId],
+    };
+    const result = await this._pool.query(query);
+    const likesCount = parseInt(result.rows[0].count, 10);
+
+    this._cacheService.set(`album-likes:${albumId}`, likesCount);
+
+    return {
+      count: likesCount,
+      isCache: false,
+    };
   }
 }
 
