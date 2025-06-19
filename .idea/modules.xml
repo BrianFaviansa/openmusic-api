@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/OpenMusic API V1.iml" filepath="$PROJECT_DIR$/.idea/OpenMusic API V1.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../OpenMusic Consumer/.idea/OpenMusic Consumer.iml" filepath="$PROJECT_DIR$/../OpenMusic Consumer/.idea/OpenMusic Consumer.iml" />
     </modules>
   </component>
 </project>
